@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+    <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
+    <http:request-config name="HTTP_Request_Configuration" protocol="HTTPS" host="mocksvc.mulesoft.com" port="443" basePath="/mocks/fd2d0ac3-f960-45e7-9e63-530ed731d0dc" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="api.raml" />
+    </http:request-config>
+    <spring:beans>
+        <spring:bean name="CustomerServiceBean" class="demoapi.services.CustomerService" />
+    </spring:beans>
+    <flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP" />
+        <apikit:router config-ref="api-config" doc:name="APIkit Router" />
+        <exception-strategy ref="api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
+    </flow>
+    <flow name="api-console">
+        <http:listener config-ref="api-httpListenerConfig" path="/console/*" doc:name="HTTP" />
+        <apikit:console config-ref="api-config" doc:name="APIkit Console" />
+    </flow>
+    <flow name="get:/customers:api-config">
+        <http:listener config-ref="api-httpListenerConfig" path="/" doc:name="HTTP" />
+        <http:request config-ref="HTTP_Request_Configuration" path="/customers" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="limit" value="25" />
+                <http:query-param paramName="page" value="0" />
+                <http:query-param paramName="changeSince" value="2000-01-01T00:00:00.090Z" />
+            </http:request-builder>
+        </http:request>
+        <invoke name="ListCustomers" object-ref="CustomerServiceBean" method="list" doc:name="List Customers" />
+        <json:object-to-json-transformer doc:name="Object to JSON" />
+        <logger message="response coming back" level="INFO" doc:name="Logger" />
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#['GOING TO ERROR PATH']" doc:name="Set Payload" />
+        </catch-exception-strategy>
+    </flow>
+    <flow name="post:/customers:api-config">
+        <http:listener config-ref="api-httpListenerConfig" path="/new" doc:name="HTTP" metadata:id="2a25d4b5-0fd2-438a-b7bc-08d8d71c66f4"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <json:json-to-object-transformer returnClass="demoapi.data.entity.Customer" doc:name="JSON to Object"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+
+        <invoke name="NewCustomer" object-ref="CustomerServiceBean" method="create" doc:name="New Customer" methodArgumentTypes="demoapi.data.entity.Customer" methodArguments="#[payload]" />
+        <logger message="response coming back" level="INFO" doc:name="Logger" />
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#['GOING TO ERROR PATH']" doc:name="Set Payload" />
+        </catch-exception-strategy>
+    </flow>
+    <flow name="get:/customers/{id}:api-config">
+        <http:listener config-ref="api-httpListenerConfig" path="/getcustomer" doc:name="HTTP" />
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
+        <http:request config-ref="HTTP_Request_Configuration" path="/customers/{id}" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="1" />
+                <http:header headerName="access_token" value="1" />
+                <http:header headerName="service_id" value="1" />
+            </http:request-builder>
+        </http:request>
+        <invoke name="GetCustomer" object-ref="CustomerServiceBean" method="get" methodArguments="#[flowVars.id]" methodArgumentTypes="java.lang.Integer" doc:name="Get Customer" />
+        <json:object-to-json-transformer doc:name="Object to JSON" />
+        <logger message="response coming back" level="INFO" doc:name="Logger" />
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#['GOING TO ERROR PATH']" doc:name="Set Payload" />
+        </catch-exception-strategy>
+    </flow>
+    <flow name="put:/customers/{id}:api-config">
+        <http:listener config-ref="api-httpListenerConfig" path="/update"  doc:name="HTTP"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <json:json-to-object-transformer returnClass="demoapi.data.entity.Customer" doc:name="JSON to Object"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+
+        <invoke name="UpdateCustomer" object-ref="CustomerServiceBean" method="update" doc:name="Update Customer" methodArgumentTypes="demoapi.data.entity.Customer" methodArguments="#[payload]" />
+        <logger message="response coming back" level="INFO" doc:name="Logger" />
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#['GOING TO ERROR PATH']" doc:name="Set Payload" />
+        </catch-exception-strategy>
+    </flow>
+    <flow name="delete:/customers/{id}:api-config">
+        <http:listener config-ref="api-httpListenerConfig" path="/delete" doc:name="HTTP"/>
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
+        <http:request config-ref="HTTP_Request_Configuration" path="/customers/{id}" method="PUT" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="1"/>
+                <http:header headerName="access_token" value="1"/>
+                <http:header headerName="service_id" value="1"/>
+            </http:request-builder>
+        </http:request>
+        <invoke name="DeleteCustomer" object-ref="CustomerServiceBean" method="delete" methodArguments="#[flowVars.id]" methodArgumentTypes="java.lang.Integer" doc:name="Delete Customer"/>
+    </flow>
+    <flow name="put:/addresses/{id}:api-config">
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    </flow>
+    <flow name="delete:/addresses/{id}:api-config">
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    </flow>
+    <flow name="get:/addresses:api-config">
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    </flow>
+    <flow name="get:/addresses/{id}:api-config">
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    </flow>
+    <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload" />
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload" />
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload" />
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload" />
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload" />
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>

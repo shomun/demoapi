@@ -1,0 +1,19 @@
+#%RAML 1.0 Library
+usage:
+
+traits: 
+  pagable:
+    queryParameters: 
+      limit:
+        type: integer
+        default: 25
+        maximum: 50
+        required: true
+      page:
+        type: integer
+        default: 0
+        required: true
+      changeSince:
+        type: datetime
+        default: 2000-01-01T00:00:00.090Z
+        required: true

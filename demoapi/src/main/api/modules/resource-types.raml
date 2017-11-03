@@ -1,0 +1,48 @@
+#%RAML 1.0 Library
+usage:
+
+uses:
+  type: types.raml
+
+resourceTypes: 
+  base:
+    get:
+      responses: 
+        200:
+          body: 
+            application/json:
+              type: [type.<<resourcePathName | !singularize>>]
+  collection:
+    description: Get All <<resourcePathName | !singularize>>
+    type: base
+
+  new:
+    description: Create new <<resourcePathName | !singularize>>
+    post:
+      body: 
+        application/json:
+          type:  [type.<<resourcePathName | !singularize>>]
+      responses: 
+        201:
+          body: 
+            application/json:
+              type: [type.<<resourcePathName | !singularize>>]
+              
+  update:
+    description: Update <<resourcePathName | !singularize>>
+    type: base
+    put:
+      body: 
+        application/json:
+          type:  [type.<<resourcePathName | !singularize>>]
+      responses: 
+        201:
+          body: 
+            application/json:
+              type: [type.<<resourcePathName | !singularize>>]
+  delete:
+    description: Delete <<resourcePathName !singularize>>
+    type: base
+    put:
+      responses: 
+        204:

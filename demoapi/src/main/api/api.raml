@@ -1,0 +1,62 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/fd2d0ac3-f960-45e7-9e63-530ed731d0dc # baseUri: https://mocksvc.mulesoft.com/mocks/687eb3ba-2907-472d-8fbf-b7416632d4ff #
+version: v1
+protocols: [HTTP,HTTPS]
+mediaType: application/json
+
+title: customers
+
+uses: 
+  security: modules/security.raml
+  resource: modules/resource-types.raml
+  queryTraits: modules/queryTrait.raml
+  
+        
+traits:
+  secured : !include traits/secure.raml
+
+types:
+  Customer: !include schemas/customer.raml
+  Address: !include schemas/address.raml
+  Error: !include schemas/error.raml
+
+/customers:
+  type:  resource.collection
+  get:
+    is: [queryTraits.pagable]
+  post:
+    description: Add a new customer
+    is: [secured]
+
+  /{id}:
+    type: resource.base
+    get:
+      description: Get customer record by gven ID    
+      is: [secured]
+    put: 
+      description: Update customer data
+      is: [secured]
+    delete:
+      description: Deletes a customer by given ID  
+      is: [secured]
+    
+       
+
+/addresses:
+  type: resource.collection          
+  get:
+    description: Get Addresses for a customer
+    queryParameters: 
+      customer_id:
+        type: integer
+        
+  /{id}:
+    type: resource.base
+    get:
+      description: Get Address by addres ID
+    put:
+      description: Update Address
+    delete:
+      description: Deletes n address    
+
+ 

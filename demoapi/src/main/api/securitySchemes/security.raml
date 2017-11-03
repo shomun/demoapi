@@ -1,0 +1,17 @@
+#%RAML 1.0 SecurityScheme
+usage: Apply this to any method that needs to be secured
+description: Some requests require authentication.
+BasicAuth:
+type: Basic Authentication
+describedBy:
+      headers:
+        Authorization:
+          description: Used to send the Base64-encoded "username:password"
+                       credentials
+          type: string
+      responses:
+        401:
+          description: |
+            Unauthorized. Either the provided username and password
+            combination is invalid, or the user is not allowed to access
+            the content provided by the requested URL.

@@ -1,0 +1,10 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "flowVariables": {
+            "customer": {}
+        }
+    },
+    "id": "2a25d4b5-0fd2-438a-b7bc-08d8d71c66f4",
+    "version": "5.2.0.0"
+}
